@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vanilla JS Task Manager</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    :root {
+      --bg: #f4f7fb;
+      --text: #1f2937;
+      --card: #ffffff;
+      --border: #d1d5db;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #058132;
+      --danger: #a90b0b;
+      --warning: #e79d1e;
+      --muted: #6b7280;
+      --shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    html[data-theme="dark"] {
+      --bg: #111827;
+      --text: #f9fafb;
+      --card: #1f2937;
+      --border: #374151;
+      --primary: #60a5fa;
+      --primary-hover: #3b82f6;
+      --success: #22c55e;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --muted: #d1d5db;
+      --shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      transition: background 0.45s ease, color 0.45s ease, filter 0.45s ease;
+    }
+
+    /* Theme toggle animation */
+.app {
+
+
+      width: min(1200px, 94%);
+      margin: auto;
+      padding: 24px 0 48px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .title-block h1 {
+      font-size: 32px;
+      margin-bottom: 4px;
+    }
+
+    .title-block p {
+      color: var(--muted);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 10px;
+      padding: 10px 14px;
+      transition: transform 0.15s, background 0.2s, opacity 0.2s, box-shadow 0.35s ease, color 0.35s ease;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+    }
+
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .theme-btn,
+    .primary-btn {
+      background: var(--primary);
+      color: white;
+    }
+
+    .theme-btn:hover,
+    .primary-btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .danger-btn {
+      background: var(--danger);
+      color: white;
+    }
+
+    .success-btn {
+      background: var(--success);
+      color: white;
+    }
+
+    .warning-btn {
+      background: var(--warning);
+      color: #111827;
+    }
+
+    .ghost-btn {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel,
+    .task-card,
+    .pipeline-card,
+    .propagation-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 20px;
+    }
+
+    .panel h2 {
+      margin-bottom: 14px;
+      font-size: 22px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 11px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--primary);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .stat-card strong {
+      display: block;
+      font-size: 24px;
+      color: var(--primary);
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr auto;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .pagination {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0 18px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0%, rgba(255, 255, 255, 0) 90%);
+    }
+
+    .pagination .pagination-side {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .pagination .pagination-right {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+
+    .pagination .page-center {
+      text-align: center;
+      min-width: 0;
+    }
+
+    .pagination .page-hint {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #pageIndicator {
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .pagination button[disabled] {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+      border-color: var(--border);
+      background: rgba(255,255,255,0.35);
+    }
+
+    html[data-theme="dark"] .pagination button[disabled] {
+      background: rgba(17,24,39,0.35);
+      box-shadow: none;
+      color: rgba(249,250,251,0.75);
+    }
+
+
+
+    .pagination button {
+      padding: 9px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0);
+      background: rgba(255,255,255,0.62);
+      color: var(--text);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease, color 0.18s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pagination button::after {
+      content: "";
+      position: absolute;
+      inset: -30% -60%;
+      background: radial-gradient(circle at 30% 30%, rgba(37,99,235,0.28), rgba(37,99,235,0) 60%);
+      transform: translateX(-20%);
+      opacity: 0;
+      transition: opacity 0.18s ease, transform 0.35s ease;
+      pointer-events: none;
+    }
+
+
+    html[data-theme="dark"] .pagination button {
+      background: rgba(17,24,39,0.55);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+    }
+
+    .pagination button:hover {
+      transform: translateY(-1px);
+      border-color: var(--primary);
+      box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18);
+    }
+
+    .pagination button:active {
+      transform: translateY(0px) scale(0.99);
+    }
+
+    .pagination button[disabled]:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: var(--border);
+    }
+
+
+
+    #taskContainer {
+      display: grid;
+      gap: 14px;
+    }
+
+
+    .task-card {
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .task-card.completed {
+      opacity: 0.75;
+    }
+
+    .task-card.completed .task-title {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .task-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 8px 0 14px;
+    }
+
+    .badge {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .note {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 12px;
+      padding: 12px;
+      border-left: 4px solid var(--primary);
+      background: var(--bg);
+      border-radius: 10px;
+    }
+
+    .section {
+      margin-top: 28px;
+    }
+
+    .section h2 {
+      margin-bottom: 14px;
+    }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      align-items: center;
+    }
+
+    .pipeline-card {
+      padding: 16px;
+      text-align: center;
+      min-height: 92px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 700;
+    }
+
+    .arrow {
+      text-align: center;
+      font-size: 26px;
+      color: var(--primary);
+      font-weight: 900;
+    }
+
+.pipeline-note {
+      margin-top: 16px;
+      color: var(--muted);
+    }
+
+    /* Pipeline Timeline */
+    .pipeline-timeline {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+      align-items: center;
+    }
+
+    @media (max-width: 850px) {
+      .pipeline-timeline {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .pipeline {
+        grid-template-columns: 1fr;
+      }
+
+      .pipeline-boxes {
+        grid-template-columns: 1fr;
+      }
+    }
+
+
+    .timeline-item {
+      display: grid;
+      justify-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .timeline-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--primary);
+      font-weight: 900;
+      border: 1px solid rgba(37, 99, 235, 0.22);
+    }
+
+    .timeline-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .timeline-connector {
+      height: 2px;
+      background: rgba(37, 99, 235, 0.35);
+      grid-column: span 1;
+      border-radius: 999px;
+      width: 100%;
+    }
+
+    /* Pipeline Cards / Boxes */
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    /* Connected boxes */
+    .pipeline-boxes {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .pipeline-box {
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .pipeline-box-title {
+      font-weight: 900;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .pipeline-box-content {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .pipeline-box-arrow {
+      font-size: 28px;
+      color: var(--primary);
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+      margin-top: -6px;
+    }
+
+    .pipeline-box-final {
+      border-color: rgba(37, 99, 235, 0.55);
+      background: rgba(37, 99, 235, 0.08);
+    }
+
+    .propagation-demo {
+
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .propagation-box {
+      padding: 20px;
+      border: 2px solid var(--primary);
+    }
+
+    .parent-box {
+      border-color: var(--warning);
+      margin: 16px;
+    }
+
+    .child-btn {
+      background: var(--success);
+      color: white;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .log-box {
+      background: #000;
+      color: #1cbdb7;
+      border-radius: 14px;
+      padding: 14px;
+      min-height: 135px;
+      font-family: Consolas, monospace;
+      white-space: pre-line;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 26px;
+      color: var(--muted);
+      border: 2px dashed var(--border);
+      border-radius: 18px;
+    }
+
+    @media (max-width: 850px) {
+      .grid,
+      .propagation-demo,
+      .filters {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="title-block">
+        <h1>Task Manager Application</h1>
+        <!-- <p>Built using HTML, CSS and Vanilla JavaScript DOM APIs only.</p> -->
+      </div>
+      <button id="themeToggle" class="theme-btn" type="button">Switch to Dark Mode</button>
+    </header>
+
+    <section class="grid">
+      <aside class="panel">
+        <h2>Create Task</h2>
+
+        <form id="taskForm">
+          <div class="form-group">
+            <label for="taskTitle">Task Title</label>
+            <!--
+              Attribute vs Property demo:
+              value="Default attribute value" is the initial HTML attribute.
+              input.value is the live/current property changed by the user.
+              input.getAttribute("value") reads the original/default attribute value unless setAttribute() changes it.
+            -->
+            <input
+              id="taskTitle"
+              type="text"
+              value="Default attribute value"
+              placeholder="Enter task title"
+              autocomplete="off"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="taskCategory">Category</label>
+            <select id="taskCategory" required>
+              <option value="Work">Work</option>
+              <option value="Study">Study</option>
+              <option value="Personal">Personal</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+          </div>
+
+          <button class="primary-btn" type="submit">Add Task</button>
+        </form>
+
+        <div class="note" id="attributeDemo" aria-live="polite">
+          <strong>Attributes vs Properties</strong>
+          <div class="attr-row">input.value: <span id="attrValueLive"></span></div>
+          <div class="attr-row">input.getAttribute("value"): <span id="attrValueAttr"></span></div>
+          <div class="attr-hint">Type in the title input: value changes, attribute stays unless setAttribute() runs.</div>
+        </div>
+
+
+        <div class="controls">
+          <button id="clearCompleted" class="ghost-btn" type="button">Clear Completed</button>
+          <button id="clearAll" class="danger-btn" type="button">Clear All</button>
+        </div>
+      </aside>
+
+      <section>
+        <div class="stats">
+          <div class="stat-card">
+            <span>Total</span>
+            <strong id="totalCounter">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>Completed</span>
+            <strong id="completedCounter">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>Pending</span>
+            <strong id="pendingCounter">0</strong>
+          </div>
+        </div>
+
+        <div class="filters">
+          <input id="searchInput" type="search" placeholder="Search tasks..." />
+          <select id="filterCategory">
+            <option value="All">All Categories</option>
+            <option value="Work">Work</option>
+            <option value="Study">Study</option>
+            <option value="Personal">Personal</option>
+            <option value="Urgent">Urgent</option>
+          </select>
+          <button id="showAll" class="ghost-btn" type="button">Show All</button>
+        </div>
+
+        <div class="pagination" id="paginationBar" aria-label="Task pagination">
+          <div class="pagination-side">
+            <button id="prevPage" class="ghost-btn" type="button">Prev</button>
+          </div>
+
+          <div class="page-center">
+            <div id="pageIndicator" aria-live="polite">Page 1 of 1</div>
+            <div class="page-hint">Showing 5 tasks per page</div>
+          </div>
+
+          <div class="pagination-right">
+            <button id="nextPage" class="ghost-btn" type="button">Next</button>
+          </div>
+        </div>
+
+
+        <div id="taskContainer">
+          <div class="empty-state" id="emptyState">No tasks yet. Add your first task.</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="section panel" aria-label="Browser Rendering Pipeline">
+      <h2>Browser Rendering Pipeline</h2>
+
+      <p class="pipeline-note">
+        The browser converts source code into something it can paint to the screen.
+        Below is a step-by-step flow from HTML to the final Render Tree.
+      </p>
+
+      <div class="pipeline-timeline" role="img" aria-label="Timeline of rendering steps">
+        <div class="timeline-item">
+          <div class="timeline-dot">1</div>
+          <div class="timeline-label">HTML</div>
+        </div>
+        <div class="timeline-connector"></div>
+        <div class="timeline-item">
+          <div class="timeline-dot">2</div>
+          <div class="timeline-label">Parsing</div>
+        </div>
+        <div class="timeline-connector"></div>
+        <div class="timeline-item">
+          <div class="timeline-dot">3</div>
+          <div class="timeline-label">Tokenization</div>
+        </div>
+        <div class="timeline-connector"></div>
+        <div class="timeline-item">
+          <div class="timeline-dot">4</div>
+          <div class="timeline-label">DOM Tree</div>
+        </div>
+        <div class="timeline-connector"></div>
+        <div class="timeline-item">
+          <div class="timeline-dot">5</div>
+          <div class="timeline-label">CSS</div>
+        </div>
+        <div class="timeline-connector"></div>
+        <div class="timeline-item">
+          <div class="timeline-dot">6</div>
+          <div class="timeline-label">CSSOM Tree</div>
+        </div>
+        <div class="timeline-connector"></div>
+        <div class="timeline-item">
+          <div class="timeline-dot">7</div>
+          <div class="timeline-label">Render Tree</div>
+        </div>
+      </div>
+
+      <div class="pipeline" aria-label="Flow diagram">
+        <div class="pipeline-step">
+          <div class="pipeline-card">HTML</div>
+          <div class="arrow">↓</div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-card">Parsing</div>
+          <div class="arrow">↓</div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-card">Tokenization</div>
+          <div class="arrow">↓</div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-card">DOM Tree</div>
+          <div class="arrow">↓</div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-card">CSS</div>
+          <div class="arrow">↓</div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-card">CSSOM Tree</div>
+          <div class="arrow">↓</div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-card">DOM Tree + CSSOM Tree</div>
+          <div class="arrow">↓</div>
+        </div>
+
+        <div class="pipeline-step">
+          <div class="pipeline-card">Render Tree</div>
+        </div>
+      </div>
+
+      <div class="pipeline-boxes" aria-label="Connected boxes">
+        <div class="pipeline-box">
+          <div class="pipeline-box-title">DOM</div>
+          <div class="pipeline-box-content">DOM Tree</div>
+        </div>
+        <div class="pipeline-box-arrow">→</div>
+        <div class="pipeline-box">
+          <div class="pipeline-box-title">CSS</div>
+          <div class="pipeline-box-content">CSSOM Tree</div>
+        </div>
+        <div class="pipeline-box-arrow">→</div>
+        <div class="pipeline-box pipeline-box-final">
+          <div class="pipeline-box-title">Final</div>
+          <div class="pipeline-box-content">Render Tree</div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="section panel">
+      <h2>Event Propagation Demonstration</h2>
+      
+      <p class="pipeline-note">
+        Click the child button. Check browser console and the log box below.
+        Bubbling runs from child to parent to grandparent. Capturing runs from grandparent to parent to child.
+      </p>
+
+      <div class="propagation-demo">
+        <div>
+          <h3>Bubbling Example</h3>
+          <div id="bubbleGrandparent" class="propagation-box">
+            Grandparent
+            <div id="bubbleParent" class="propagation-box parent-box">
+              Parent
+              <button id="bubbleChild" class="child-btn" type="button">Child Button - Bubbling</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3>Capturing Example</h3>
+          <div id="captureGrandparent" class="propagation-box">
+            Grandparent
+            <div id="captureParent" class="propagation-box parent-box">
+              Parent
+              <button id="captureChild" class="child-btn" type="button">Child Button - Capturing</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 16px;">Execution Log</h3>
+      <div id="eventLog" class="log-box">Click any child button to see order...</div>
+    </section>
+  </main>
+
+  <script>
+    const htmlElement = document.documentElement;
+    const themeToggle = document.getElementById("themeToggle");
+    const taskForm = document.getElementById("taskForm");
+    const taskTitleInput = document.getElementById("taskTitle");
+    const taskCategorySelect = document.getElementById("taskCategory");
+    const taskContainer = document.getElementById("taskContainer");
+    const emptyState = document.getElementById("emptyState");
+    const searchInput = document.getElementById("searchInput");
+    const filterCategory = document.getElementById("filterCategory");
+    const showAll = document.getElementById("showAll");
+    const clearAll = document.getElementById("clearAll");
+    const clearCompleted = document.getElementById("clearCompleted");
+    const totalCounter = document.getElementById("totalCounter");
+    const completedCounter = document.getElementById("completedCounter");
+    const pendingCounter = document.getElementById("pendingCounter");
+    const eventLog = document.getElementById("eventLog");
+
+    const attrValueLive = document.getElementById("attrValueLive");
+    const attrValueAttr = document.getElementById("attrValueAttr");
+
+
+    const prevPageBtn = document.getElementById("prevPage");
+    const nextPageBtn = document.getElementById("nextPage");
+    const pageIndicator = document.getElementById("pageIndicator");
+
+    const TASKS_PER_PAGE = 5;
+    let currentPage = 1;
+
+    let tasks = JSON.parse(localStorage.getItem("vanillaTasks")) || [];
+
+
+    // Attribute vs Property demonstration
+    // Property: input.value gives the current value visible in the input box.
+    // Attribute: input.getAttribute("value") gives the HTML attribute value.
+    // If the user types something, input.value changes, but getAttribute("value") remains same.
+    console.log("Initial input.value:", taskTitleInput.value);
+    console.log("Initial input.getAttribute('value'):", taskTitleInput.getAttribute("value"));
+
+    function updateAttributePropertyDemo() {
+      // Live property (changes as you type)
+      attrValueLive.textContent = taskTitleInput.value;
+
+      // Original attribute value (only changes if setAttribute runs)
+      attrValueAttr.textContent = taskTitleInput.getAttribute("value");
+    }
+
+    // Initial render for demo panel
+    updateAttributePropertyDemo();
+
+    taskTitleInput.addEventListener("input", function () {
+      console.log("Live property input.value:", taskTitleInput.value);
+      console.log("Original attribute getAttribute('value'):", taskTitleInput.getAttribute("value"));
+      updateAttributePropertyDemo();
+    });
+
+
+    function saveTasks() {
+      localStorage.setItem("vanillaTasks", JSON.stringify(tasks));
+    }
+
+    function updateCounters() {
+      const total = tasks.length;
+      const completed = tasks.filter(task => task.status === "completed").length;
+      const pending = total - completed;
+
+      totalCounter.textContent = total;
+      completedCounter.textContent = completed;
+      pendingCounter.textContent = pending;
+    }
+
+    function createTaskCard(task) {
+      const card = document.createElement("article");
+      card.className = "task-card";
+
+      if (task.status === "completed") {
+        card.classList.add("completed");
+      }
+
+      // Custom data attributes
+      card.setAttribute("data-id", task.id);
+      card.setAttribute("data-status", task.status);
+      card.setAttribute("data-category", task.category);
+
+      // dataset usage
+      card.dataset.title = task.title.toLowerCase();
+
+      const title = document.createElement("h3");
+      title.className = "task-title";
+      title.appendChild(document.createTextNode(task.title));
+
+      const meta = document.createElement("div");
+      meta.className = "task-meta";
+
+      const categoryBadge = document.createElement("span");
+      categoryBadge.className = "badge";
+      categoryBadge.append(document.createTextNode("Category: " + task.category));
+
+      const statusBadge = document.createElement("span");
+      statusBadge.className = "badge";
+      statusBadge.append(document.createTextNode("Status: " + task.status));
+
+      meta.append(categoryBadge, statusBadge);
+
+      const actions = document.createElement("div");
+      actions.className = "task-actions";
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "warning-btn";
+      editBtn.dataset.action = "edit";
+      editBtn.append(document.createTextNode("Edit"));
+
+      const completeBtn = document.createElement("button");
+      completeBtn.className = "success-btn";
+      completeBtn.dataset.action = "complete";
+      completeBtn.append(document.createTextNode(task.status === "completed" ? "Undo" : "Complete"));
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "danger-btn";
+      deleteBtn.dataset.action = "delete";
+      deleteBtn.append(document.createTextNode("Delete"));
+
+      actions.append(editBtn, completeBtn, deleteBtn);
+
+      // append() usage
+      card.append(title, meta, actions);
+
+      return card;
+    }
+
+    function renderTasks() {
+      taskContainer.innerHTML = "";
+
+      const totalTasks = tasks.length;
+
+      // Pagination is FULL-LIST only, but the UI should still react to search.
+      // We apply search/category filters only for deciding what to show on the page.
+      // (Counters stay for full list.)
+      const searchText = searchInput.value.toLowerCase().trim();
+      const selectedCategory = filterCategory.value;
+
+      const filteredTasks = tasks.filter(task => {
+        const matchesSearch = task.title.toLowerCase().includes(searchText);
+        const matchesCategory = selectedCategory === "All" || task.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+      });
+
+      const totalPages = Math.max(1, Math.ceil(filteredTasks.length / TASKS_PER_PAGE));
+      currentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+      const startIndex = (currentPage - 1) * TASKS_PER_PAGE;
+      const endIndex = startIndex + TASKS_PER_PAGE;
+      const pagedTasks = filteredTasks.slice(startIndex, endIndex);
+
+      prevPageBtn.disabled = currentPage === 1;
+      nextPageBtn.disabled = currentPage === totalPages;
+      pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+
+      if (pagedTasks.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.id = "emptyState";
+        empty.textContent = totalTasks === 0 ? "No tasks yet. Add your first task." : "No matching tasks found.";
+        taskContainer.appendChild(empty);
+      } else {
+        const fragment = document.createDocumentFragment();
+        pagedTasks.forEach(task => {
+          fragment.appendChild(createTaskCard(task));
+        });
+        taskContainer.appendChild(fragment);
+      }
+
+      updateCounters();
+    }
+
+    taskForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      currentPage = 1;
+
+
+      const title = taskTitleInput.value.trim();
+      const category = taskCategorySelect.value;
+
+      if (!title) return;
+
+      const task = {
+        id: Date.now().toString(),
+        title: title,
+        category: category,
+        status: "pending"
+      };
+
+      tasks.unshift(task);
+      saveTasks();
+
+      // setAttribute() changes the HTML attribute value also.
+      taskTitleInput.setAttribute("value", title);
+      console.log("After setAttribute, getAttribute('value'):", taskTitleInput.getAttribute("value"));
+      updateAttributePropertyDemo();
+
+
+      taskForm.reset();
+      taskTitleInput.value = "";
+
+      renderTasks();
+    });
+
+    // Event Delegation: one listener on parent container handles edit, complete and delete.
+    taskContainer.addEventListener("click", function (event) {
+      const button = event.target.closest("button");
+      if (!button) return;
+
+      const card = button.closest(".task-card");
+      if (!card) return;
+
+      const taskId = card.dataset.id;
+      const action = button.dataset.action;
+      const task = tasks.find(item => item.id === taskId);
+
+      // getAttribute(), hasAttribute(), removeAttribute() practice
+      console.log("Task data-id using getAttribute:", card.getAttribute("data-id"));
+      console.log("Has data-status?", card.hasAttribute("data-status"));
+
+      if (action === "delete") {
+        tasks = tasks.filter(item => item.id !== taskId);
+        saveTasks();
+
+        // remove() usage
+        card.remove();
+        renderTasks();
+      }
+
+      if (action === "complete") {
+        task.status = task.status === "completed" ? "pending" : "completed";
+        card.setAttribute("data-status", task.status);
+
+        // removeAttribute() demo only when completed, then set it back during render.
+        if (task.status === "completed") {
+          card.removeAttribute("data-temp");
+        }
+
+        saveTasks();
+        renderTasks();
+      }
+
+      if (action === "edit") {
+        const newTitle = prompt("Edit task title:", task.title);
+        if (newTitle && newTitle.trim()) {
+          task.title = newTitle.trim();
+          saveTasks();
+
+          const updatedCard = createTaskCard(task);
+
+          // before() and after() usage: add temporary markers around card
+          const beforeMarker = document.createElement("small");
+          beforeMarker.textContent = "Updating task...";
+          beforeMarker.style.color = "var(--primary)";
+          card.before(beforeMarker);
+
+          const afterMarker = document.createElement("small");
+          afterMarker.textContent = "Updated successfully";
+          afterMarker.style.color = "var(--success)";
+          card.after(afterMarker);
+
+          // replaceWith() usage
+          card.replaceWith(updatedCard);
+
+          setTimeout(() => {
+            beforeMarker.remove();
+            afterMarker.remove();
+          }, 900);
+
+          updateCounters();
+        }
+      }
+    });
+
+    prevPageBtn.addEventListener("click", function () {
+      currentPage -= 1;
+      renderTasks();
+    });
+
+    nextPageBtn.addEventListener("click", function () {
+      currentPage += 1;
+      renderTasks();
+    });
+
+    // Search + category filters still work visually only via counters; pagination is full-list only.
+    // (Intentionally not affecting pagination slice.)
+    searchInput.addEventListener("input", renderTasks);
+    filterCategory.addEventListener("change", renderTasks);
+
+    showAll.addEventListener("click", function () {
+      searchInput.value = "";
+      filterCategory.value = "All";
+      renderTasks();
+    });
+
+
+    clearAll.addEventListener("click", function () {
+      tasks = [];
+      currentPage = 1;
+      saveTasks();
+      renderTasks();
+    });
+
+    clearCompleted.addEventListener("click", function () {
+      tasks = tasks.filter(task => task.status !== "completed");
+      currentPage = 1;
+      saveTasks();
+      renderTasks();
+    });
+
+
+
+
+
+    themeToggle.addEventListener("click", function () {
+      const currentTheme = htmlElement.dataset.theme;
+      const nextTheme = currentTheme === "dark" ? "light" : "dark";
+
+
+
+
+      // dataset usage
+      htmlElement.dataset.theme = nextTheme;
+
+      // setAttribute usage to store current theme as custom data attribute
+      htmlElement.setAttribute("data-theme", nextTheme);
+
+      // classList usage
+      document.body.classList.toggle("dark-mode", nextTheme === "dark");
+
+      themeToggle.textContent = nextTheme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode";
+      // premium shadow contrast without redesign
+      document.body.style.filter = nextTheme === "dark" ? "saturate(1.02)" : "saturate(1)";
+      // toggle icon micro feel: quick fade+rotate via CSS class above
+
+      setTimeout(() => {
+        document.body.style.filter = "";
+      }, 300);
+
+      localStorage.setItem("theme", nextTheme);
+    });
+
+
+    function loadTheme() {
+      const savedTheme = localStorage.getItem("theme") || "light";
+      htmlElement.dataset.theme = savedTheme;
+      htmlElement.setAttribute("data-theme", savedTheme);
+      document.body.classList.toggle("dark-mode", savedTheme === "dark");
+      themeToggle.textContent = savedTheme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode";
+    }
+
+    function logEvent(message) {
+      console.log(message);
+      if (eventLog.textContent.includes("Click any child")) {
+        eventLog.textContent = "";
+      }
+      eventLog.textContent += message + "\n";
+    }
+
+    function clearLog(title) {
+      eventLog.textContent = title + "\n";
+      console.clear();
+    }
+
+    // Bubbling demo:
+    // Default event phase. Event travels from Child -> Parent -> Grandparent.
+    document.getElementById("bubbleChild").addEventListener("click", function () {
+      clearLog("Bubbling Order:");
+      logEvent("Child");
+    });
+
+    document.getElementById("bubbleParent").addEventListener("click", function () {
+      logEvent("Parent");
+    });
+
+    document.getElementById("bubbleGrandparent").addEventListener("click", function () {
+      logEvent("Grandparent");
+    });
+
+    // Capturing demo:
+    // Third argument true enables capturing phase.
+    // Event travels from Grandparent -> Parent -> Child.
+    document.getElementById("captureGrandparent").addEventListener("click", function () {
+      clearLog("Capturing Order:");
+      logEvent("Grandparent");
+    }, true);
+
+    document.getElementById("captureParent").addEventListener("click", function () {
+      logEvent("Parent");
+    }, true);
+
+    document.getElementById("captureChild").addEventListener("click", function () {
+      logEvent("Child");
+    }, true);
+
+    // prepend() usage: showing a small welcome message at top of task container first time.
+    const welcomeMessage = document.createElement("div");
+    welcomeMessage.className = "note";
+    welcomeMessage.textContent = "Tip: Use search, filter, edit, complete and delete actions.";
+    taskContainer.prepend(welcomeMessage);
+
+    setTimeout(() => {
+      welcomeMessage.remove();
+      renderTasks();
+    }, 1600);
+
+    loadTheme();
+    renderTasks();
+  </script>
+</body>
+</html>
